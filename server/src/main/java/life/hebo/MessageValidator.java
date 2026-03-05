@@ -28,7 +28,10 @@ public class MessageValidator {
         // Validate userName
         String userName = message.getUsername();
         if (userName == null || userName.length() < MIN_USERNAME_LENGTH || userName.length() > MAX_USERNAME_LENGTH) {
-            return ValidationResult.invalid("username must be " + MIN_USERNAME_LENGTH + "-" + MAX_USERNAME_LENGTH + " alphanumeric characters");
+            return ValidationResult.invalid("username must be " + MIN_USERNAME_LENGTH + "-" + MAX_USERNAME_LENGTH + " characters");
+        }
+        if (!userName.matches("^[a-zA-Z0-9]+$")) {
+            return ValidationResult.invalid("username must be alphanumeric");
         }
 
         // Validate message content
