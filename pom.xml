@@ -18,8 +18,7 @@
 
     <modules>
         <module>server</module>
-        <module>client-part1</module>
-        <module>client-part2</module>
+        <module>consumer</module>
     </modules>
 
     <properties>
