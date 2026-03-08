@@ -6,6 +6,7 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.net.URI;
 import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.Map;
@@ -46,6 +47,19 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         try {
             // Parse incoming message
             ChatMessage chatMessage = objectMapper.readValue(message.getPayload(), ChatMessage.class);
+
+            // Extract roomId from WebSocket URL path (/chat/{roomId})
+            String roomIdFromUrl = extractRoomIdFromSession(session);
+            if (roomIdFromUrl == null) {
+                ServerResponse response = new ServerResponse(
+                        "ERROR",
+                        Instant.now().toString(),
+                        "Invalid or missing roomId in URL path"
+                );
+                echoBackToSender(session, response);
+                return;
+            }
+            chatMessage.setRoomId(roomIdFromUrl);
 
             // Enforce JOIN → TEXT/LEAVE ordering: must JOIN first; after LEAVE, no more TEXT
             String stateError = checkMessageTypeVsSessionState(session.getId(), chatMessage.getMessageType());
@@ -120,6 +134,23 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         System.err.println("Transport error for session " + session.getId() + ": " + exception.getMessage());
         sessions.remove(session.getId());
         sessionStates.remove(session.getId());
+    }
+
+    private String extractRoomIdFromSession(WebSocketSession session) {
+        URI uri = session.getUri();
+        if (uri == null || uri.getPath() == null) {
+            return null;
+        }
+        String path = uri.getPath();
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        int lastSlash = path.lastIndexOf('/');
+        if (lastSlash < 0) {
+            return null;
+        }
+        String roomId = path.substring(lastSlash + 1);
+        return roomId.isEmpty() ? null : roomId;
     }
 
     private String extractClientIp(WebSocketSession session) {

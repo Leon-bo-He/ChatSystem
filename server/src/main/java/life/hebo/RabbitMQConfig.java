@@ -5,9 +5,7 @@ import com.rabbitmq.client.ConnectionFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.TimeoutException;
 
 @Configuration
 public class RabbitMQConfig {
@@ -42,19 +40,23 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public ChannelPool channelPool(ConnectionFactory rabbitConnectionFactory) throws IOException, TimeoutException {
+    public ChannelPool channelPool(ConnectionFactory rabbitConnectionFactory) {
         int poolSize = Optional.ofNullable(System.getenv("RABBITMQ_CHANNEL_POOL_SIZE"))
                 .map(Integer::parseInt)
                 .orElse(10);
 
-        ChannelPool pool = new ChannelPool(rabbitConnectionFactory, poolSize);
-        pool.init();
-        return pool;
+        // Connect lazily on first publish; avoids failing startup when RabbitMQ is unavailable
+        return new ChannelPool(rabbitConnectionFactory, poolSize);
     }
 
     @Bean
     public MessageQueuePublisher messageQueuePublisher(ChannelPool channelPool, ObjectMapper objectMapper) {
         return new MessageQueuePublisher(channelPool, objectMapper);
+    }
+
+    @Bean
+    public ChatWebSocketHandler chatWebSocketHandler(MessageQueuePublisher messageQueuePublisher) {
+        return new ChatWebSocketHandler(messageQueuePublisher);
     }
 }
 

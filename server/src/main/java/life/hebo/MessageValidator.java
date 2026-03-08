@@ -36,10 +36,18 @@ public class MessageValidator {
             return ValidationResult.invalid("username must be alphanumeric");
         }
 
-        // Validate message content
-        String msgContent = message.getMessage();
-        if (msgContent == null || msgContent.length() < MIN_MESSAGE_LENGTH || msgContent.length() > MAX_MESSAGE_LENGTH) {
-            return ValidationResult.invalid("message must be " + MIN_MESSAGE_LENGTH + "-" + MAX_MESSAGE_LENGTH + " characters");
+        // Validate messageType (needed before message content validation)
+        MessageType messageType = message.getMessageType();
+        if (messageType == null || (!messageType.equals(MessageType.TEXT) && !messageType.equals(MessageType.JOIN) && !messageType.equals(MessageType.LEAVE))) {
+            return ValidationResult.invalid("messageType must be one of the specified values: TEXT|JOIN|LEAVE");
+        }
+
+        // Validate message content only for TEXT; JOIN and LEAVE do not require a message
+        if (messageType == MessageType.TEXT) {
+            String msgContent = message.getMessage();
+            if (msgContent == null || msgContent.length() < MIN_MESSAGE_LENGTH || msgContent.length() > MAX_MESSAGE_LENGTH) {
+                return ValidationResult.invalid("message must be " + MIN_MESSAGE_LENGTH + "-" + MAX_MESSAGE_LENGTH + " characters");
+            }
         }
 
         // Validate timestamp format
@@ -47,12 +55,6 @@ public class MessageValidator {
             DATE_TIME_FORMATTER.parse(message.getTimestamp());
         } catch (Exception e) {
             return ValidationResult.invalid("timestamp must be valid ISO-8601");
-        }
-
-        // Validate messageType
-        MessageType messageType = message.getMessageType();
-        if (messageType == null || (!messageType.equals(MessageType.TEXT) && !messageType.equals(MessageType.JOIN) && !messageType.equals(MessageType.LEAVE))) {
-            return ValidationResult.invalid("messageType must be one of the specified values: TEXT|JOIN|LEAVE");
         }
 
         // Validate roomId

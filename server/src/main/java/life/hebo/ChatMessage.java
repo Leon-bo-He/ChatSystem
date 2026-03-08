@@ -1,6 +1,6 @@
 package life.hebo;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,6 +15,8 @@ public class ChatMessage {
     private String message;
     private String timestamp;
     private MessageType messageType;
+    
+    @JsonIgnore
     private String roomId;
 
 }
