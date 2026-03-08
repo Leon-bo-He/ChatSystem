@@ -10,6 +10,8 @@ public class MessageValidator {
     private static final int MAX_USERNAME_LENGTH = 20;
     private static final int MIN_MESSAGE_LENGTH = 1;
     private static final int MAX_MESSAGE_LENGTH = 500;
+    private static final int MIN_ROOM_ID = 1;
+    private static final int MAX_ROOM_ID = 20;
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_INSTANT;
 
@@ -51,6 +53,16 @@ public class MessageValidator {
         MessageType messageType = message.getMessageType();
         if (messageType == null || (!messageType.equals(MessageType.TEXT) && !messageType.equals(MessageType.JOIN) && !messageType.equals(MessageType.LEAVE))) {
             return ValidationResult.invalid("messageType must be one of the specified values: TEXT|JOIN|LEAVE");
+        }
+
+        // Validate roomId
+        try{
+            int roomID = Integer.parseInt(message.getRoomId());
+            if (roomID < MIN_ROOM_ID || roomID > MAX_ROOM_ID) {
+                return ValidationResult.invalid("roomId must be between " + MIN_ROOM_ID + " and " + MAX_ROOM_ID);
+            }
+        } catch (NumberFormatException e) {
+            return ValidationResult.invalid("roomId must be a valid integer");
         }
 
         return ValidationResult.valid();
