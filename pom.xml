@@ -17,7 +17,7 @@
     </parent>
 
     <modules>
-        <module>server</module>
+        <module>server-v2</module>
         <module>consumer</module>
     </modules>
 
