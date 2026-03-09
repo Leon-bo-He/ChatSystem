@@ -24,7 +24,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
             .orElseGet(() -> UUID.randomUUID().toString());
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
-    /** Per-session state: must JOIN before TEXT/LEAVE; after LEAVE, no more TEXT. */
+    // Per-session state: must JOIN before TEXT/LEAVE; after LEAVE, no more TEXT.
     private final Map<String, SessionState> sessionStates = new ConcurrentHashMap<>();
 
     private static final class SessionState {
@@ -45,7 +45,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         try {
-            // Parse incoming message
             ChatMessage chatMessage = objectMapper.readValue(message.getPayload(), ChatMessage.class);
 
             // Extract roomId from WebSocket URL path (/chat/{roomId})
@@ -170,10 +169,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    /**
-     * Check message type against session state: must JOIN before TEXT/LEAVE; after LEAVE, no more TEXT.
-     * @return error message if invalid, null if allowed
-     */
     private String checkMessageTypeVsSessionState(String sessionId, MessageType messageType) {
         if (messageType == null) return null; // validator will catch this
         SessionState state = sessionStates.get(sessionId);
