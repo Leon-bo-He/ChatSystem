@@ -18,7 +18,7 @@
 
     <modules>
         <module>server-v2</module>
-        <module>consumer</module>
+        <module>consumer-v3</module>
     </modules>
 
     <properties>
