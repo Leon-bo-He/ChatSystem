@@ -2,7 +2,6 @@ package life.hebo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.ConnectionFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -12,8 +11,10 @@ public class ConsumerPoolRunner implements CommandLineRunner {
     private final ConnectionFactory connectionFactory;
     private final RoomManager roomManager;
     private final ObjectMapper objectMapper;
+    private final MessagePersistenceService persistenceService;
+    private final ConsumerStatsAggregator statsAggregator;
+    private final ConsumerProperties properties;
     private final ConsumerHealthIndicator healthIndicator;
-    private final int workerCount;
 
     private volatile ConsumerPool consumerPool;
     private volatile Thread consumerThread;
@@ -21,18 +22,22 @@ public class ConsumerPoolRunner implements CommandLineRunner {
     public ConsumerPoolRunner(ConnectionFactory connectionFactory,
                               RoomManager roomManager,
                               ObjectMapper objectMapper,
-                              ConsumerHealthIndicator healthIndicator,
-                              @Value("${app.consumer.worker-threads:4}") int workerCount) {
+                              MessagePersistenceService persistenceService,
+                              ConsumerStatsAggregator statsAggregator,
+                              ConsumerProperties properties,
+                              ConsumerHealthIndicator healthIndicator) {
         this.connectionFactory = connectionFactory;
         this.roomManager = roomManager;
         this.objectMapper = objectMapper;
+        this.persistenceService = persistenceService;
+        this.statsAggregator = statsAggregator;
+        this.properties = properties;
         this.healthIndicator = healthIndicator;
-        this.workerCount = workerCount;
     }
 
     @Override
     public void run(String... args) {
-        consumerPool = new ConsumerPool(connectionFactory, roomManager, objectMapper, workerCount);
+        consumerPool = new ConsumerPool(connectionFactory, roomManager, objectMapper, persistenceService, statsAggregator, properties);
         consumerThread = new Thread(consumerPool, "consumer-pool-main");
         consumerThread.setDaemon(false);
         consumerThread.start();

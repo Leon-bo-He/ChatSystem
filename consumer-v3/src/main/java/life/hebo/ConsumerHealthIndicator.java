@@ -8,10 +8,12 @@ import org.springframework.stereotype.Component;
 public class ConsumerHealthIndicator implements HealthIndicator {
 
     private final RoomManager roomManager;
+    private final ConsumerStatsAggregator statsAggregator;
     private volatile boolean consumerRunning = true;
 
-    public ConsumerHealthIndicator(RoomManager roomManager) {
+    public ConsumerHealthIndicator(RoomManager roomManager, ConsumerStatsAggregator statsAggregator) {
         this.roomManager = roomManager;
+        this.statsAggregator = statsAggregator;
     }
 
     public void setConsumerRunning(boolean running) {
@@ -26,6 +28,7 @@ public class ConsumerHealthIndicator implements HealthIndicator {
                 .withDetail("activeUsers", roomManager.getActiveUserCount())
                 .withDetail("messagesProcessed", roomManager.getMessagesProcessed())
                 .withDetail("deliveryFailures", roomManager.getDeliveryFailures())
+                .withDetail("persistence", statsAggregator.snapshot())
                 .build();
     }
 }
