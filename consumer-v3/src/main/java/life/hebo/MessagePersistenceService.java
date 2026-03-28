@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -32,7 +33,8 @@ public class MessagePersistenceService {
 
     public int[] upsertBatch(List<QueueMessage> messages, int batchSize) {
         ParameterizedPreparedStatementSetter<QueueMessage> pss = this::setStatement;
-        return jdbcTemplate.batchUpdate(UPSERT_SQL, messages, batchSize, pss);
+        int[][] batches = jdbcTemplate.batchUpdate(UPSERT_SQL, messages, batchSize, pss);
+        return Arrays.stream(batches).flatMapToInt(Arrays::stream).toArray();
     }
 
     private void setStatement(PreparedStatement ps, QueueMessage qm) throws SQLException {
